@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bavul Hazırlama Macerası</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .progress {
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+            height: 10px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            background: white;
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        
+        .game-area {
+            padding: 30px;
+        }
+        
+        .destination-card {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .destination-card h2 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.8em;
+        }
+        
+        .destination-card .subtitle {
+            color: #666;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+        
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .item-btn {
+            background: white;
+            border: 3px solid #ddd;
+            border-radius: 10px;
+            padding: 15px 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+            text-align: center;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .item-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .item-btn.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .item-btn.correct {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+        
+        .item-btn.wrong {
+            background: #ef4444;
+            color: white;
+            border-color: #ef4444;
+        }
+        
+        .action-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .result-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .result-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 500px;
+            animation: slideIn 0.5s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .result-content h2 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+        
+        .score {
+            font-size: 3em;
+            font-weight: bold;
+            color: #f5576c;
+            margin: 20px 0;
+        }
+        
+        .feedback {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 10px;
+        }
+        
+        .instructions {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .emoji {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧳 Bavul Hazırlama Macerası</h1>
+            <p>Destinasyon: <span id="currentDest">1</span> / 15</p>
+            <div class="progress">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+        </div>
+        
+        <div class="game-area">
+            <div class="instructions">
+                <strong>📋 Nasıl Oynanır:</strong> Her destinasyon için KESİNLİKLE GEREKLİ olan 3 eşyayı seçin. Doğru seçimlerinizle puan kazanın!
+            </div>
+            
+            <div id="destinationCard"></div>
+            <button class="action-btn" id="checkBtn" onclick="checkAnswers()">Cevapları Kontrol Et</button>
+            <button class="action-btn" id="nextBtn" onclick="nextDestination()" style="display:none;">Sonraki Destinasyon</button>
+        </div>
+    </div>
+    
+    <div class="result-modal" id="resultModal">
+        <div class="result-content">
+            <div class="emoji" id="resultEmoji"></div>
+            <h2 id="resultTitle"></h2>
+            <div class="score" id="finalScore"></div>
+            <div class="feedback" id="feedback"></div>
+            <button class="action-btn" onclick="restartGame()">Tekrar Oyna</button>
+        </div>
+    </div>
+
+    <script>
+        const destinations = [
+            {
+                name: "Norveç",
+                subtitle: "Fiyortlar / Soğuk ve Yağışlı İklim",
+                required: ["Yağmurluk", "Katmanlı giysiler", "Yürüyüş botları"],
+                notRequired: ["Şnorkel takımı", "Plaj havlusu", "İnce yazlık elbise"]
+            },
+            {
+                name: "Mısır",
+                subtitle: "Çöl / Sıcak ve Kuru İklim",
+                required: ["Güneş kremi", "Geniş kenarlı şapka", "Açık renkli giysiler"],
+                notRequired: ["Kayak gözlüğü", "Kar ayakkabısı", "Kalın yün eldiven"]
+            },
+            {
+                name: "Japonya (Tokyo)",
+                subtitle: "Kalabalık Şehir ve Kültürel Etkinlikler",
+                required: ["Rahat yürüyüş ayakkabıları", "Taşınabilir Wi-Fi", "Tercüme uygulaması"],
+                notRequired: ["Vahşi yaşam dürbünü", "Deniz yatağı", "Palet"]
+            },
+            {
+                name: "Brezilya (Rio)",
+                subtitle: "Tropikal Plaj ve Karnaval",
+                required: ["Mayo/Bikini", "Hafif yazlık giysiler", "Sivrisinek kovucu"],
+                notRequired: ["Termal içlik", "Buz kazma", "Kar küreği"]
+            },
+            {
+                name: "İsviçre (Alpler)",
+                subtitle: "Kış Sporları ve Dağcılık",
+                required: ["Termal giysiler", "Güneş gözlüğü", "Kalın mont"],
+                notRequired: ["Sandalet", "Deniz maskesi", "Hamak"]
+            },
+            {
+                name: "Hindistan (Yeni Delhi)",
+                subtitle: "Yoğun Nüfus ve Baharatlı Yemekler",
+                required: ["El dezenfektanı", "Mide ilaçları", "Islak mendil"],
+                notRequired: ["Gösterişli mücevherler", "Ağır botlar", "Kano"]
+            },
+            {
+                name: "İzlanda",
+                subtitle: "Soğuk, Volkanik Arazi ve Kuzey Işıkları",
+                required: ["Kamera tripod'u", "Yalıtımlı ceket", "Termal şişe"],
+                notRequired: ["Yüksek topuklu ayakkabı", "Güneş yağı", "Hasır çanta"]
+            },
+            {
+                name: "Avustralya (Kıyı)",
+                subtitle: "Güneşli ve Deniz Hayvanları",
+                required: ["Yüksek faktörlü güneş kremi", "Şapka", "Nefes alan kıyafetler"],
+                notRequired: ["Kalın yün kazak", "Kayak eldiveni", "Şemsiye"]
+            },
+            {
+                name: "İtalya (Venedik)",
+                subtitle: "Tarihi Şehir ve Su Yolları",
+                required: ["Rahat yürüyüş ayakkabıları", "Venedik haritası", "Şık kıyafetler"],
+                notRequired: ["Kar botları", "Dağ tırmanış halatı", "Çöl kaskı"]
+            },
+            {
+                name: "Rusya (Sibirya)",
+                subtitle: "Aşırı Kış Şartları",
+                required: ["Katmanlı giysiler", "Yüz kapatan atkı", "Termal botlar"],
+                notRequired: ["Sivrisinek filesi", "İnce keten pantolon", "Plaj şemsiyesi"]
+            },
+            {
+                name: "Kenya (Safari)",
+                subtitle: "Sıcak ve Vahşi Yaşam Gözlem",
+                required: ["Böcek kovucu sprey", "Dürbün", "Toprak renkli giysiler"],
+                notRequired: ["Parlak renkli giysiler", "Tüplü dalış ekipmanı", "Kalın palto"]
+            },
+            {
+                name: "Kanada (Bölgesel Parklar)",
+                subtitle: "Ormanlık Alan ve Kampçılık",
+                required: ["Kamp malzemeleri", "İlk yardım çantası", "Ayakkabı bağı yedeği"],
+                notRequired: ["Mini etek/şort", "Resmi takım elbise", "Yüksek topuklu ayakkabı"]
+            },
+            {
+                name: "Meksika (Yarımada)",
+                subtitle: "Deniz Tatili ve Maya Harabeleri",
+                required: ["Yüzme gözlüğü", "UV korumalı güneş kremi", "Hafif şort/tişört"],
+                notRequired: ["Kalın kaşmir atkı", "Buz pateni", "Snowboard"]
+            },
+            {
+                name: "Grönland (Buzullar)",
+                subtitle: "Soğuk Hava Balıkçılığı",
+                required: ["Rüzgar geçirmez ceket", "Kar gözlüğü", "Kalın yün çorap"],
+                notRequired: ["Mayo", "Yazlık şapka", "Böcek kovucu"]
+            },
+            {
+                name: "Türkiye (İstanbul)",
+                subtitle: "Büyük Şehir, Tarihi Yerler, Kültürel Karmaşa",
+                required: ["Şık ve rahat ayakkabılar", "Şal/başörtüsü", "İstanbul Kart"],
+                notRequired: ["Kutup ayısı dürbünü", "Kano", "Kar tırmanma ekipmanı"]
+            }
+        ];
+
+        let currentIndex = 0;
+        let score = 0;
+        let selectedItems = [];
+        let answered = false;
+
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function loadDestination() {
+            answered = false;
+            selectedItems = [];
+            const dest = destinations[currentIndex];
+            const allItems = shuffleArray([...dest.required, ...dest.notRequired]);
+            
+            document.getElementById('currentDest').textContent = currentIndex + 1;
+            document.getElementById('progressBar').style.width = ((currentIndex + 1) / destinations.length * 100) + '%';
+            
+            const card = document.getElementById('destinationCard');
+            card.innerHTML = `
+                <div class="destination-card">
+                    <h2>${dest.name}</h2>
+                    <p class="subtitle">${dest.subtitle}</p>
+                    <p><strong>🎯 Görev:</strong> KESİNLİKLE GEREKLİ olan 3 eşyayı seçin</p>
+                    <div class="items-grid" id="itemsGrid">
+                        ${allItems.map((item, idx) => `
+                            <button class="item-btn" onclick="selectItem(${idx}, '${item}')">${item}</button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('checkBtn').style.display = 'block';
+            document.getElementById('nextBtn').style.display = 'none';
+        }
+
+        function selectItem(idx, item) {
+            if (answered) return;
+            
+            const btn = document.querySelectorAll('.item-btn')[idx];
+            
+            if (selectedItems.includes(item)) {
+                selectedItems = selectedItems.filter(i => i !== item);
+                btn.classList.remove('selected');
+            } else {
+                if (selectedItems.length < 3) {
+                    selectedItems.push(item);
+                    btn.classList.add('selected');
+                }
+            }
+            
+            document.getElementById('checkBtn').disabled = selectedItems.length !== 3;
+        }
+
+        function checkAnswers() {
+            if (selectedItems.length !== 3) return;
+            
+            answered = true;
+            const dest = destinations[currentIndex];
+            const buttons = document.querySelectorAll('.item-btn');
+            let correct = 0;
+            
+            buttons.forEach(btn => {
+                const item = btn.textContent;
+                if (dest.required.includes(item)) {
+                    btn.classList.add('correct');
+                    if (selectedItems.includes(item)) correct++;
+                } else if (selectedItems.includes(item)) {
+                    btn.classList.add('wrong');
+                }
+            });
+            
+            score += correct;
+            
+            document.getElementById('checkBtn').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'block';
+        }
+
+        function nextDestination() {
+            currentIndex++;
+            if (currentIndex < destinations.length) {
+                loadDestination();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            const modal = document.getElementById('resultModal');
+            const maxScore = destinations.length * 3;
+            const percentage = (score / maxScore * 100).toFixed(0);
+            
+            let emoji, title, feedback;
+            
+            if (percentage >= 90) {
+                emoji = "🏆";
+                title = "Mükemmel!";
+                feedback = "Profesyonel bir gezginsin! Tüm destinasyonlar için doğru eşyaları seçtin.";
+            } else if (percentage >= 70) {
+                emoji = "🌟";
+                title = "Harika!";
+                feedback = "Çok iyi bir performans! Bavul hazırlama konusunda yeteneklisin.";
+            } else if (percentage >= 50) {
+                emoji = "👍";
+                title = "İyi!";
+                feedback = "Fena değil! Biraz daha pratikle mükemmel olacaksın.";
+            } else {
+                emoji = "💪";
+                title = "Denemeye Devam!";
+                feedback = "Endişelenme, pratik yapmaya devam et. Her seyahat bir öğrenme deneyimidir!";
+            }
+            
+            document.getElementById('resultEmoji').textContent = emoji;
+            document.getElementById('resultTitle').textContent = title;
+            document.getElementById('finalScore').textContent = `${score} / ${maxScore}`;
+            document.getElementById('feedback').textContent = feedback;
+            
+            modal.style.display = 'flex';
+        }
+
+        function restartGame() {
+            currentIndex = 0;
+            score = 0;
+            document.getElementById('resultModal').style.display = 'none';
+            loadDestination();
+        }
+
+        loadDestination();
+    </script>
+</body>
+</html>
