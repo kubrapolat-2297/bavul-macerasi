@@ -1,1 +1,1 @@
-bavul macerası
+bavul-macerası
